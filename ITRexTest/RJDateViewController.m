@@ -131,13 +131,14 @@
                        andLongitude:self.longitude
                           onSuccess:^(RJLocation *location) {
                               
-                              RJLocationData *currentLocation;
                               if ([self currentLocationDoesExist:location]) {
-                                  currentLocation = self.currentLocation;
-                              } else {
-                                  currentLocation = [NSEntityDescription insertNewObjectForEntityForName:@"RJLocationData" inManagedObjectContext:self.managedObjectContext];
-                                  self.dataLocation = currentLocation;
+                                  [self.managedObjectContext deleteObject:self.currentLocation];
+                                  self.currentLocation = nil;
                               }
+                              
+                              [[RJDataManager sharedManager] saveContext];
+                              
+                              RJLocationData *currentLocation = [NSEntityDescription insertNewObjectForEntityForName:@"RJLocationData" inManagedObjectContext:self.managedObjectContext];
                               
                               [self transformToCoreDataLocation:currentLocation fromServerLocation:location];
                               
@@ -160,13 +161,11 @@
 }
 
 - (void)transformToCoreDataLocation:(RJLocationData *)dataLocation fromServerLocation:(RJLocation *)serverLocation {
-    if (!self.currentLocation) {
-        dataLocation.cityName = serverLocation.cityName;
-        dataLocation.latitude = serverLocation.latitude;
-        dataLocation.longitude = serverLocation.longitude;
-        dataLocation.countryIndex = serverLocation.countryIndex;
-        dataLocation.dates = [NSSet setWithArray:[self sortAllForecastsByDateFromArray:serverLocation.forecasts]];
-    }
+    dataLocation.cityName = serverLocation.cityName;
+    dataLocation.latitude = serverLocation.latitude;
+    dataLocation.longitude = serverLocation.longitude;
+    dataLocation.countryIndex = serverLocation.countryIndex;
+    dataLocation.dates = [NSSet setWithArray:[self sortAllForecastsByDateFromArray:serverLocation.forecasts]];
     
     NSSortDescriptor *orderSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"orderNumber" ascending:NO];
     NSArray *locationsArray = [self getAllObjectsForEntity:@"RJLocationData" withSortDescriptors:@[orderSortDescriptor]];
@@ -195,17 +194,12 @@
         
         NSString *forecastDate = [formatter stringFromDate:forecast.date];
         
-        if ([forecastDate isEqualToString:currentDate]) {
-            
-        } else {
+        if (![forecastDate isEqualToString:currentDate]) {
             if (date) {
                 [dateArray removeAllObjects];
             }
-            if (self.currentLocation) {
-                date = [[[self.currentLocation dates] allObjects] objectAtIndex:[forecastsArray indexOfObject:forecast]];
-            } else {
-                date = [NSEntityDescription insertNewObjectForEntityForName:@"RJDateData" inManagedObjectContext:self.managedObjectContext];
-            }
+
+            date = [NSEntityDescription insertNewObjectForEntityForName:@"RJDateData" inManagedObjectContext:self.managedObjectContext];
             date.date = forecast.date;
             date.location = self.dataLocation;
             currentDate = forecastDate;
