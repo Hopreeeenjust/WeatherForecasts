@@ -134,9 +134,8 @@
                               if ([self currentLocationDoesExist:location]) {
                                   [self.managedObjectContext deleteObject:self.currentLocation];
                                   self.currentLocation = nil;
+                                  [[RJDataManager sharedManager] saveContext];
                               }
-                              
-                              [[RJDataManager sharedManager] saveContext];
                               
                               RJLocationData *currentLocation = [NSEntityDescription insertNewObjectForEntityForName:@"RJLocationData" inManagedObjectContext:self.managedObjectContext];
                               

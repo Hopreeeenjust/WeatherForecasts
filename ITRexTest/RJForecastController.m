@@ -173,6 +173,8 @@
         imageURL = @"https://ssl.gstatic.com/onebox/weather/256/sunny.png";
     } else if ([weatherType isEqualToString:@"Clouds"]) {
         imageURL = @"https://ssl.gstatic.com/onebox/weather/256/cloudy.png";
+    } else if ([weatherType isEqualToString:@"Snow"]) {
+        imageURL = @"https://ssl.gstatic.com/onebox/weather/256/snow.png";
     } else {
         imageURL = nil;
     }
